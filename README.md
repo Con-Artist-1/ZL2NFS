@@ -1,14 +1,6 @@
 
 # Diavlon Launcher XL
 
-> **⚠️ UNOFFICIAL MODIFIED VERSION**
->
-> This project will soon be changed its name to: TreeLauncher (in summer, when school and exams are done) and ill scope for better features and new ui, codebase then.)
-> 
-> This is an unofficial fork of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2). This project is **not affiliated with or endorsed by the official Zalith Launcher project**.
-
-**Diavlon Launcher XL** is a community-modified launcher for **Android devices** tailored for [Minecraft: Java Edition](https://www.minecraft.net/). It builds upon the foundation of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), utilizing [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/tree/v3_openjdk/app_pojavlauncher/src/main/jni) as its core launching engine with a modern UI built using **Jetpack Compose** and **Material Design 3**.
-
 ## 📋 What's New in This Fork?
 
 This fork aims to enhance and customize the original Zalith Launcher 2 experience. Some key improvements include:
@@ -20,23 +12,6 @@ This fork aims to enhance and customize the original Zalith Launcher 2 experienc
 - [x] Shortcuts in main screen
 - [x] Importing/exporting settings
 - [x] Importing/exporting accounts along with capes and skins
-
-**Soon:**
-- [ ] Friend system
-- [ ] First ever performance update
-
-
-## 🔗 Upstream Project
-
-This project is derived from the excellent work of the Zalith Launcher team:
-- **Original Project:** [ZalithLauncher2](https://github.com/ZalithLauncher/ZalithLauncher2)
-- **Original License:** GPL-3.0
-
-Please visit the upstream project if you want the official, unmodified version.
-
-## 🌐 Language and Translation Support
-
-This fork uses translations of Zalith Launcher 2. To contribute translations or improvements, please consider contributing upstream to the [Zalith Launcher 2 Weblate project](https://hosted.weblate.org/projects/zalithlauncher2).
 
 ## 📦 Build Instructions (For Developers)
 
@@ -51,7 +26,7 @@ This fork uses translations of Zalith Launcher 2. To contribute translations or 
 ### Build Steps
 
 ```bash
-git clone https://github.com/Star1xr/ZalithLauncher2Plus.git
+git clone https://github.com/Con-Artist-1/ZL2NFS.git
 # Open the project in Android Studio and build
 ```
 
@@ -69,15 +44,6 @@ This project is licensed under the **[GPL-3.0 license](LICENSE)**, inherited fro
 
 This project inherits all dependencies from Zalith Launcher 2. Please refer to the original project's [README](https://github.com/ZalithLauncher/ZalithLauncher2/blob/main/README.md) for the complete list of open source libraries and their licenses.
 
-## 🤝 Contributing
-
-This is a community fork. Before contributing:
-
-1. Review the [CONTRIBUTING.md](./CONTRIBUTING.md) guidelines
-2. Check existing issues and pull requests
-3. Follow the code style and conventions
-4. Document your changes clearly
-
 ## ⚠️ Support and Disclaimers
 
 - This is an **unofficial fork**. Official support should be sought from the [upstream Zalith Launcher 2 project](https://github.com/ZalithLauncher/ZalithLauncher2)
@@ -91,13 +57,6 @@ This is a community fork. Before contributing:
 - Be cautious of third-party websites claiming to distribute this software
 - Protect your personal information and credentials
 - Report security issues responsibly through the issue tracker
-
-## 📞 Contact & Links
-
-- **Original Project:** https://github.com/ZalithLauncher/ZalithLauncher2
-- **This Fork:** https://github.com/Star1xr/ZalithLauncher2Plus
-
----
 
 **Zalith Launcher 2** is the original project created and maintained by the Zalith Launcher team.  
 **Diavlon Launcher XL** is an unofficial community fork created to provide enhanced features and modifications.
