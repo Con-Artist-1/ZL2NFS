@@ -667,9 +667,9 @@
     <string name="about_launcher_project_link">GitHub Linki</string>
     <string name="about_sponsor">Sponsorluk Desteği</string>
     <string name="disclaimer_title">Resmi Olmayan Sürüm</string>
-    <string name="disclaimer_content">Bu, Zalith Launcher 2\'nin resmi olmayan, değiştirilmiş bir versiyonudur.</string>
+
     <string name="disclaimer_original_repo">Orijinal Repo</string>
-    <string name="launcher_fork_subtitle">Zalith Launcher 2\'nin bir çatalıdır</string>
+
     <string name="about_acknowledgements_title">Teşekkür ve Atıflar</string>
     <string name="about_acknowledgements_pojav_text">%s PojavLauncherdan başlatma backend kodu kullanır</string>
     <string name="about_acknowledgements_pcl_text">%s uygulamasının bazı kısımlarına PCL2den atıfta bulunur</string>

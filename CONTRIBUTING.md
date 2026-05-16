@@ -1,6 +1,6 @@
-# Contributing to Zalith Launcher 2+
+# Contributing to Diavlon Launcher XL
 
-Thank you for your interest in contributing to **Zalith Launcher 2+**! This is a community-driven fork, and we welcome contributions from developers of all skill levels.
+Thank you for your interest in contributing to **Diavlon Launcher XL**! This is a community-driven fork, and we welcome contributions from developers of all skill levels.
 
 ## Before You Start
 
@@ -342,4 +342,4 @@ Contributors are recognized through:
 
 ---
 
-Thank you for making Zalith Launcher 2+ better! 🚀
+Thank you for making Diavlon Launcher XL better! 🚀
