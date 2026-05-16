@@ -23,7 +23,7 @@ val launcherUrl = project.findProperty("url_home") as? String ?: error("The \"ur
 val launcherVersionCode = (project.findProperty("launcher_version_code") as? String)?.toIntOrNull() ?: error("The \"launcher_version_code\" property is not set as an integer in gradle.properties.")
 val launcherVersionName = project.findProperty("launcher_version_name") as? String ?: error("The \"launcher_version_name\" property is not set in gradle.properties.")
 
-val defaultOAuthClientID = project.findProperty("oauth_client_id") as? String
+// OAuth client ID removed — Microsoft auth disabled
 val defaultStorePassword = project.findProperty("default_store_password") as? String ?: error("The \"default_store_password\" property is not set in gradle.properties.")
 val defaultKeyPassword = project.findProperty("default_key_password") as? String ?: error("The \"default_key_password\" property is not set in gradle.properties.")
 val defaultCurseForgeApiKey = project.findProperty("curseforge_api_key") as? String
@@ -210,7 +210,7 @@ tasks.register("generateInfoDistributor") {
         fun String.toStatement(type: String = "String", variable: String) = "public static final $type $variable = $this;"
 
         val constantList = listOf(
-            "\"${getKeyFromLocal("OAUTH_CLIENT_ID", ".oauth_client_id.txt", defaultOAuthClientID)}\"".toStatement(variable = "OAUTH_CLIENT_ID"),
+            "\"\"".toStatement(variable = "OAUTH_CLIENT_ID"), // Microsoft auth disabled
             "\"$launcherAPPName\"".toStatement(variable = "LAUNCHER_NAME"),
             "\"$launcherName\"".toStatement(variable = "LAUNCHER_IDENTIFIER"),
             "\"$launcherShortName\"".toStatement(variable = "LAUNCHER_SHORT_NAME"),

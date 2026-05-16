@@ -153,7 +153,7 @@ fun LaunchGameOperation(
                 }
                 val isOffline = AccountsManager.isOffline.value
                 toAccountManageScreen(
-                    if (isOffline) FirstLoginMenu.MICROSOFT
+                    if (isOffline) FirstLoginMenu.NORMAL
                     else FirstLoginMenu.NORMAL
                 )
                 updateOperation(LaunchGameOperation.None)

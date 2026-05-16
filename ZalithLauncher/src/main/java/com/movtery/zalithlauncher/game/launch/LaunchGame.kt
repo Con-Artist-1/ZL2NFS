@@ -26,10 +26,6 @@ import com.movtery.zalithlauncher.game.account.Account
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.auth_server.ResponseException
 import com.movtery.zalithlauncher.game.account.isLocalAccount
-import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException
-import com.movtery.zalithlauncher.game.account.microsoft.NotPurchasedMinecraftException
-import com.movtery.zalithlauncher.game.account.microsoft.XboxLoginException
-import com.movtery.zalithlauncher.game.account.microsoft.toLocal
 import com.movtery.zalithlauncher.game.version.download.DownloadMode
 import com.movtery.zalithlauncher.game.version.download.MinecraftDownloader
 import com.movtery.zalithlauncher.game.version.installed.Version
@@ -153,9 +149,6 @@ object LaunchGame {
                 },
                 onFailed = { error ->
                     val message: String = when (error) {
-                        is NotPurchasedMinecraftException -> toLocal(context)
-                        is MinecraftProfileException -> error.toLocal(context)
-                        is XboxLoginException -> error.toLocal(context)
                         is ResponseException -> error.responseMessage
                         is HttpRequestTimeoutException -> context.getString(R.string.error_timeout)
                         is UnknownHostException, is UnresolvedAddressException -> context.getString(R.string.error_network_unreachable)

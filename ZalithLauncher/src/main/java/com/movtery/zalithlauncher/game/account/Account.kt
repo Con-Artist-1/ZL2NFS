@@ -69,7 +69,6 @@ data class Account(
      */
     suspend fun downloadYggdrasil() = withContext(Dispatchers.IO) {
         val baseUrl = when {
-            isMicrosoftAccount() -> "https://sessionserver.mojang.com"
             isAuthServerAccount() -> otherBaseUrl!!.removeSuffix("/") + "/sessionserver/"
             else -> null
         }

@@ -387,7 +387,7 @@ class LaunchArgs(
         varArgMap["game_assets"] = getAssetsHome()
         varArgMap["game_directory"] = gameDirPath.absolutePath
         varArgMap["user_properties"] = "{}"
-        varArgMap["user_type"] = "msa"
+        varArgMap["user_type"] = "legacy"
         varArgMap["version_name"] = gameManifest.id
 
         setLauncherInfo(varArgMap)

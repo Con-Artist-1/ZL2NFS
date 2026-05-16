@@ -198,7 +198,8 @@ fun AccountManageScreen(
         when (key.loginMenu) {
             FirstLoginMenu.NONE -> {}
             FirstLoginMenu.MICROSOFT -> {
-                actions.onIntent(AccountManageIntent.UpdateMicrosoftLoginOp(MicrosoftLoginOperation.Tip))
+                // Microsoft login disabled — show normal login menu instead
+                actions.onIntent(AccountManageIntent.UpdateLoginMenuOp(LoginMenuOperation.Login))
             }
             FirstLoginMenu.NORMAL -> {
                 actions.onIntent(AccountManageIntent.UpdateLoginMenuOp(LoginMenuOperation.Login))
@@ -372,8 +373,8 @@ private fun ActionsLayout(
                 .fillMaxWidth(),
             onClick = {
                 if (isOffline) {
-                    //非正版状态下，只允许创建微软账号
-                    actions.onIntent(AccountManageIntent.UpdateMicrosoftLoginOp(MicrosoftLoginOperation.Tip))
+                    // Offline mode: show normal login menu
+                    actions.onIntent(AccountManageIntent.UpdateLoginMenuOp(LoginMenuOperation.Login))
                 } else {
                     actions.onIntent(AccountManageIntent.UpdateLoginMenuOp(LoginMenuOperation.Login))
                 }

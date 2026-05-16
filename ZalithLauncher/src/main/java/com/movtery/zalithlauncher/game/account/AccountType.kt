@@ -19,5 +19,7 @@
 package com.movtery.zalithlauncher.game.account
 
 enum class AccountType(val tag: String) {
-    MICROSOFT("Microsoft"), LOCAL("Local")
+    @Deprecated("Microsoft accounts are no longer supported. Kept for DB migration compatibility.")
+    MICROSOFT("Microsoft"),
+    LOCAL("Local")
 }

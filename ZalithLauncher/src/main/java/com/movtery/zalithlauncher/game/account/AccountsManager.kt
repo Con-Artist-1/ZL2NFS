@@ -153,9 +153,6 @@ object AccountsManager {
         account.isAuthServerAccount() -> {
             otherLogin(context, account, onSuccess, onFailed, onFinally)
         }
-        account.isMicrosoftAccount() -> {
-            microsoftRefresh(account, onSuccess, onFailed, onFinally)
-        }
         else -> null
     }
 
@@ -263,7 +260,6 @@ object AccountsManager {
         }
     }
 
-    fun hasMicrosoftAccount(): Boolean = _accounts.any { it.isMicrosoftAccount() }
 
     fun loadFromProfileID(profileId: String, accountType: String? = null): Account? =
         _accounts.find { it.profileId == profileId && (accountType == null || it.accountType == accountType) }

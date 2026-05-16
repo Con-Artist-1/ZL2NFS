@@ -23,32 +23,14 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.context.COPY_LABEL_DEVICE_CODE
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.account.auth_server.AuthServerHelper
 import com.movtery.zalithlauncher.game.account.auth_server.data.AuthServer
 import com.movtery.zalithlauncher.game.account.auth_server.getAuthServeInfo
-import com.movtery.zalithlauncher.game.account.microsoft.AsyncStatus
-import com.movtery.zalithlauncher.game.account.microsoft.AuthType
-import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException
-import com.movtery.zalithlauncher.game.account.microsoft.NotPurchasedMinecraftException
-import com.movtery.zalithlauncher.game.account.microsoft.XboxLoginException
-import com.movtery.zalithlauncher.game.account.microsoft.fetchDeviceCodeResponse
-import com.movtery.zalithlauncher.game.account.microsoft.getTokenResponse
-import com.movtery.zalithlauncher.game.account.microsoft.microsoftAuthAsync
-import com.movtery.zalithlauncher.game.account.microsoft.toLocal
-import com.movtery.zalithlauncher.ui.screens.content.elements.MicrosoftLoginOperation
-import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.logging.Logger.lError
-import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
-import io.ktor.client.plugins.HttpRequestTimeoutException
-import io.ktor.client.plugins.ResponseException
-import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.ConnectException
 import java.net.HttpURLConnection
@@ -58,193 +40,43 @@ import java.nio.channels.UnresolvedAddressException
 import java.util.Locale
 import java.util.Objects
 import java.util.UUID
-import kotlin.coroutines.CoroutineContext
 
 fun Account.isAuthServerAccount(): Boolean {
     return !isLocalAccount() && !Objects.isNull(otherBaseUrl) && otherBaseUrl != "0"
 }
 
+/**
+ * Microsoft accounts are no longer supported. Always returns false.
+ */
 fun Account.isMicrosoftAccount(): Boolean {
-    return accountType == AccountType.MICROSOFT.tag
+    return false
 }
 
 fun Account.isLocalAccount(): Boolean {
-    return accountType == AccountType.LOCAL.tag
+    return accountType == AccountType.LOCAL.tag || accountType == AccountType.MICROSOFT.tag
 }
 
 fun Account?.isNoLoginRequired(): Boolean {
-    return this == null || isLocalAccount()
+    return true // All accounts are offline — no login ever required
 }
 
 fun Account.isSkinChangeAllowed(): Boolean {
-    return isMicrosoftAccount() || isLocalAccount()
+    return isLocalAccount()
 }
 
 fun Account.accountTypePriority(): Int {
     return when (this.accountType) {
-        AccountType.MICROSOFT.tag -> 0 //微软账号优先
         null -> Int.MAX_VALUE
         else -> 1
     }
 }
 
-private const val MICROSOFT_LOGGING_TASK = "microsoft_logging_task"
-
 /**
- * 检查当前微软账号登陆是否正在进行中
+ * Microsoft login is disabled. Always returns false.
  */
-fun isMicrosoftLogging() = TaskSystem.containsTask(MICROSOFT_LOGGING_TASK)
+fun isMicrosoftLogging() = false
 
-fun microsoftLogin(
-    context: Context,
-    toWeb: (url: String) -> Unit,
-    backToMain: () -> Unit,
-    checkIfInWebScreen: () -> Boolean,
-    updateOperation: (MicrosoftLoginOperation) -> Unit,
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
-) {
-    val task = Task.runTask(
-        id = MICROSOFT_LOGGING_TASK,
-        dispatcher = Dispatchers.IO,
-        task = { task ->
-            task.updateProgress(-1f, R.string.account_microsoft_fetch_device_code)
-            val deviceCode = fetchDeviceCodeResponse(coroutineContext)
-            copyText(COPY_LABEL_DEVICE_CODE, deviceCode.userCode, context, false)
-            withContext(Dispatchers.Main) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.account_microsoft_coped_device_code, deviceCode.userCode),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            toWeb(deviceCode.verificationUrl)
-            task.updateProgress(-1f, R.string.account_microsoft_get_token, deviceCode.userCode)
-            val tokenResponse = getTokenResponse(deviceCode, coroutineContext) { time ->
-                (!checkIfInWebScreen()).also { exit ->
-                    if (exit && time > 0) withContext(Dispatchers.Main) {
-                        //如果已退出网页，则视为用户想要退出登录
-                        //弹出提示
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.account_microsoft_exit_by_user),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-            backToMain()
-            val account = microsoftAuth(
-                AuthType.Access,
-                tokenResponse.refreshToken,
-                tokenResponse.accessToken,
-                coroutineContext = coroutineContext,
-                updateProgress = task::updateProgress
-            )
-            task.updateMessage(R.string.account_logging_in_saving)
-            account.downloadYggdrasil()
-            AccountsManager.saveAccount(account)
-        },
-        onError = { th ->
-            when (th) {
-                is HttpRequestTimeoutException -> context.getString(R.string.account_logging_time_out)
-                is NotPurchasedMinecraftException -> toLocal(context)
-                is MinecraftProfileException -> th.toLocal(context)
-                is XboxLoginException -> th.toLocal(context)
-                is UnknownHostException, is UnresolvedAddressException -> context.getString(R.string.error_network_unreachable)
-                is ConnectException -> context.getString(R.string.error_connection_failed)
-                is ResponseException -> {
-                    val statusCode = th.response.status
-                    val res = when (statusCode) {
-                        HttpStatusCode.Unauthorized -> R.string.error_unauthorized
-                        HttpStatusCode.NotFound -> R.string.error_notfound
-                        else -> R.string.error_client_error
-                    }
-                    context.getString(res, statusCode)
-                }
-                is CancellationException -> { null }
-                else -> {
-                    val errorMessage = th.localizedMessage ?: th.message ?: th::class.qualifiedName ?: "Unknown error"
-                    context.getString(R.string.error_unknown, errorMessage)
-                }
-            }?.let { message ->
-                submitError(
-                    ErrorViewModel.ThrowableMessage(
-                        title = context.getString(R.string.account_logging_in_failed),
-                        message = message
-                    )
-                )
-            }
-        },
-        onFinally = {
-            updateOperation(MicrosoftLoginOperation.None)
-        }
-    )
-
-    TaskSystem.submitTask(task)
-}
-
-private suspend fun microsoftAuth(
-    authType: AuthType,
-    refreshToken: String,
-    accessToken: String = "NULL",
-    coroutineContext: CoroutineContext,
-    updateProgress: (Float, Int) -> Unit
-): Account {
-    return microsoftAuthAsync(authType, refreshToken, accessToken, coroutineContext) { asyncStatus ->
-        when (asyncStatus) {
-            AsyncStatus.GETTING_ACCESS_TOKEN ->     updateProgress(0.25f, R.string.account_microsoft_getting_access_token)
-            AsyncStatus.GETTING_XBL_TOKEN ->        updateProgress(0.4f, R.string.account_microsoft_getting_xbl_token)
-            AsyncStatus.GETTING_XSTS_TOKEN ->       updateProgress(0.55f, R.string.account_microsoft_getting_xsts_token)
-            AsyncStatus.AUTHENTICATE_MINECRAFT ->   updateProgress(0.7f, R.string.account_microsoft_authenticate_minecraft)
-            AsyncStatus.VERIFY_GAME_OWNERSHIP ->    updateProgress(0.85f, R.string.account_microsoft_verify_game_ownership)
-            AsyncStatus.GETTING_PLAYER_PROFILE ->   updateProgress(1f, R.string.account_microsoft_getting_player_profile)
-        }
-    }
-}
-
-fun microsoftRefresh(
-    account: Account,
-    onSuccess: suspend (Account, Task) -> Unit,
-    onFailed: (th: Throwable) -> Unit = {},
-    onFinally: () -> Unit = {}
-): Task? {
-    if (TaskSystem.containsTask(account.profileId)) return null
-
-    return Task.runTask(
-        id = account.profileId,
-        dispatcher = Dispatchers.IO,
-        task = { task ->
-            account.refreshMicrosoft(task, coroutineContext)
-            onSuccess(account, task)
-        },
-        onError = { e ->
-            if (e is CancellationException) return@runTask
-            onFailed(e)
-        },
-        onFinally = onFinally
-    )
-}
-
-suspend fun Account.refreshMicrosoft(
-    task: Task,
-    coroutineContext: CoroutineContext = Dispatchers.IO
-) {
-    val newAcc = microsoftAuth(
-        AuthType.Refresh,
-        refreshToken,
-        accessToken,
-        coroutineContext = coroutineContext,
-        updateProgress = task::updateProgress
-    )
-    apply {
-        this.accessToken = newAcc.accessToken
-        this.clientToken = newAcc.clientToken
-        this.profileId = newAcc.profileId
-        this.username = newAcc.username
-        this.refreshToken = newAcc.refreshToken
-        this.xUid = newAcc.xUid
-    }
-}
+// Microsoft login/refresh functions removed — offline only mode
 
 fun otherLogin(
     context: Context,
@@ -364,9 +196,7 @@ fun addOtherServer(
  */
 @Composable
 fun getAccountTypeName(account: Account): String {
-    return if (account.isMicrosoftAccount()) {
-        stringResource(R.string.account_type_microsoft)
-    } else if (account.isAuthServerAccount()) {
+    return if (account.isAuthServerAccount()) {
         account.accountType ?: "Unknown"
     } else {
         stringResource(R.string.account_type_local)

@@ -34,15 +34,7 @@ import com.movtery.zalithlauncher.game.account.auth_server.AuthServerHelper
 import com.movtery.zalithlauncher.game.account.auth_server.ResponseException
 import com.movtery.zalithlauncher.game.account.auth_server.data.AuthServer
 import com.movtery.zalithlauncher.game.account.isLocalAccount
-import com.movtery.zalithlauncher.game.account.isMicrosoftAccount
 import com.movtery.zalithlauncher.game.account.localLogin
-import com.movtery.zalithlauncher.game.account.microsoft.MINECRAFT_SERVICES_URL
-import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException
-import com.movtery.zalithlauncher.game.account.microsoft.NotPurchasedMinecraftException
-import com.movtery.zalithlauncher.game.account.microsoft.XboxLoginException
-import com.movtery.zalithlauncher.game.account.microsoft.toLocal
-import com.movtery.zalithlauncher.game.account.microsoftLogin
-import com.movtery.zalithlauncher.game.account.refreshMicrosoft
 import com.movtery.zalithlauncher.game.account.wardrobe.EmptyCape
 import com.movtery.zalithlauncher.game.account.wardrobe.SkinModelType
 import com.movtery.zalithlauncher.game.account.wardrobe.capeLocalRes
@@ -506,25 +498,16 @@ class AccountManageViewModel @Inject constructor(
         }
     }
 
-    /** 执行微软登录流程 */
+    /** Microsoft login is disabled — this is now a no-op */
     private fun performMicrosoftLogin(intent: AccountManageIntent.PerformMicrosoftLogin) {
-        microsoftLogin(
-            context,
-            intent.toWeb,
-            intent.backToMain,
-            intent.checkIfInWebScreen,
-            { onIntent(AccountManageIntent.UpdateMicrosoftLoginOp(it)) },
-            { emitError(it.title, it.message) }
-        )
+        // Microsoft login disabled in offline-only mode
         onIntent(AccountManageIntent.UpdateMicrosoftLoginOp(MicrosoftLoginOperation.None))
     }
 
     /** 应用选中的皮肤 */
     private fun applySkin(account: Account, file: File, model: SkinModelType) {
-        when {
-            account.isLocalAccount() -> saveLocalSkin(account, file, model)
-            account.isMicrosoftAccount() -> importSkinFile(account, file, model)
-        }
+        // All accounts are local in offline-only mode
+        saveLocalSkin(account, file, model)
     }
 
     /** 处理皮肤文件导入 */
@@ -561,160 +544,19 @@ class AccountManageViewModel @Inject constructor(
         )
     }
 
-    /** 上传微软皮肤 */
+    /** Microsoft skin upload disabled — no-op */
     private fun uploadMicrosoftSkin(intent: AccountManageIntent.UploadMicrosoftSkin) {
-        val account = intent.account
-        val skinFile = intent.skinFile
-        val skinModel = intent.skinModel
-
-        TaskSystem.submitTask(
-            Task.runTask(
-                dispatcher = Dispatchers.IO,
-                task = { task ->
-                    executeWithAuthorization(block = {
-                        task.updateProgress(-1f, R.string.account_change_skin_uploading)
-                        uploadSkin(MINECRAFT_SERVICES_URL, account.accessToken, skinFile, skinModel)
-                    }, onRefreshRequest = {
-                        account.refreshMicrosoft(task = task, coroutineContext = coroutineContext)
-                        AccountsManager.suspendSaveAccount(account)
-                    })
-
-                    task.updateMessage(R.string.account_change_skin_update_local)
-                    runCatching { account.downloadYggdrasil() }.onFailure { th ->
-                        emitError(
-                            context.getString(R.string.account_logging_in_failed),
-                            formatAccountError(th)
-                        )
-                    }
-
-                    emitToast(
-                        R.string.account_change_skin_update_toast,
-                        duration = Toast.LENGTH_LONG
-                    )
-                },
-                onError = { th ->
-                    val (title, msg) = if (th is KtorResponseException) {
-                        val body = th.response.safeBodyAsJson<JsonObject>()
-                        context.getString(
-                            R.string.account_change_skin_failed_to_upload,
-                            th.response.status.value
-                        ) to (body["errorMessage"]?.jsonPrimitive?.contentOrNull
-                            ?: th.getMessageOrToString())
-                    } else {
-                        context.getString(R.string.generic_error) to formatAccountError(th)
-                    }
-                    emitError(title, msg)
-                }
-            )
-        )
+        // Microsoft skin upload disabled in offline-only mode
     }
 
-    /** 获取微软披风列表 */
+    /** Microsoft cape fetching disabled — no-op */
     private fun fetchMicrosoftCapes(account: Account) {
-        TaskSystem.submitTask(
-            Task.runTask(
-                id = account.uniqueUUID,
-                dispatcher = Dispatchers.IO,
-                task = { task ->
-                    executeWithAuthorization(block = {
-                        task.updateProgress(-1f, R.string.account_change_cape_fetch_all)
-                        val profile = getPlayerProfile(MINECRAFT_SERVICES_URL, account.accessToken)
-                        task.updateProgress(-1f, R.string.account_change_cape_cache_all)
-                        cacheAllCapes(profile)
-                        //同时更新本地的皮肤/披风
-                        account.downloadYggdrasil()
-                        _accountCapeOpMap.update { it + (account.uniqueUUID to profile.capes) }
-                    }, onRefreshRequest = {
-                        account.refreshMicrosoft(task = task, coroutineContext = coroutineContext)
-                        AccountsManager.suspendSaveAccount(account)
-                    })
-                },
-                onError = { th ->
-                    emitError(
-                        context.getString(R.string.generic_error),
-                        context.getString(R.string.account_change_cape_fetch_all_failed) + "\r\n" + th.getMessageOrToString()
-                    )
-                }
-            )
-        )
+        // Microsoft cape fetching disabled in offline-only mode
     }
 
-    /** 更改微软账号披风 */
+    /** Microsoft cape changing disabled — no-op */
     private fun applyMicrosoftCape(intent: AccountManageIntent.ApplyMicrosoftCape) {
-        val account = intent.account
-        val cape = intent.cape
-        val capeId = cape.id
-        val isReset = cape == EmptyCape
-
-        TaskSystem.submitTask(
-            Task.runTask(
-                id = account.uniqueUUID + "_cape",
-                dispatcher = Dispatchers.IO,
-                task = { task ->
-                    executeWithAuthorization(block = {
-                        task.updateMessage(R.string.account_change_cape_apply)
-                        changeCape(
-                            MINECRAFT_SERVICES_URL,
-                            account.accessToken,
-                            capeId
-                        )
-                    }, onRefreshRequest = {
-                        account.refreshMicrosoft(task = task, coroutineContext = coroutineContext)
-                        AccountsManager.suspendSaveAccount(account)
-                    })
-
-                    val capeFile = cape.getFile(PathManager.DIR_ACCOUNT_CAPE)
-                    val targetCape = account.getCapeFile()
-                    FileUtils.deleteQuietly(targetCape)
-                    if (!isReset && capeFile.exists()) {
-                        runCatching {
-                            capeFile.copyTo(targetCape)
-                        }
-                    }
-
-                    AccountsManager.refreshWardrobe()
-
-                    _accountCapeOpMap.update { capesMap ->
-                        if (!capesMap.containsKey(account.uniqueUUID)) return@update capesMap
-                        buildMap {
-                            capesMap.forEach { (accountId, capes) ->
-                                if (accountId == account.uniqueUUID) {
-                                    val newList = capes.map { cape ->
-                                        when {
-                                            cape.id == capeId -> cape.copy(state = "ACTIVE")
-                                            cape.state == "ACTIVE" -> cape.copy(state = "INACTIVE")
-                                            else -> cape
-                                        }
-                                    }
-                                    put(accountId, newList)
-                                } else put(accountId, capes)
-                            }
-                        }
-                    }
-
-                    if (isReset) emitToast(R.string.account_change_cape_apply_reset)
-                    else emitToast(
-                        R.string.account_change_cape_apply_success,
-                        cape.capeLocalRes()?.let {
-                            context.getString(it)
-                        } ?: cape.alias
-                    )
-                },
-                onError = { th ->
-                    val (title, msg) = if (th is KtorResponseException) {
-                        val body = th.response.safeBodyAsJson<JsonObject>()
-                        context.getString(
-                            R.string.account_change_cape_apply_failed,
-                            th.response.status.value
-                        ) to (body["errorMessage"]?.jsonPrimitive?.contentOrNull
-                            ?: th.getMessageOrToString())
-                    } else {
-                        context.getString(R.string.generic_error) to formatAccountError(th)
-                    }
-                    emitError(title, msg)
-                }
-            )
-        )
+        // Microsoft cape changing disabled in offline-only mode
     }
 
     private fun applyCustomCape(intent: AccountManageIntent.ApplyCustomCape) {
@@ -882,9 +724,6 @@ class AccountManageViewModel @Inject constructor(
      * @return 格式化后的错误提示
      */
     fun formatAccountError(th: Throwable): String = when (th) {
-        is NotPurchasedMinecraftException -> toLocal(context)
-        is MinecraftProfileException -> th.toLocal(context)
-        is XboxLoginException -> th.toLocal(context)
         is HttpRequestTimeoutException -> context.getString(R.string.error_timeout)
         is UnknownHostException, is UnresolvedAddressException -> context.getString(R.string.error_network_unreachable)
         is ConnectException -> context.getString(R.string.error_connection_failed)
